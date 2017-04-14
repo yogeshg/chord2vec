@@ -24,7 +24,7 @@ import random
 import numpy as np
 import tensorflow as tf
 from six.moves import xrange  # pylint: disable=redefined-builtin
-from tensorflow.models.rnn.translate import data_utils
+from translate import data_utils
 
 from bach import seq2seq
 

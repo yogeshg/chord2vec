@@ -17,7 +17,7 @@ from tensorflow.python.ops import embedding_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import nn_ops
 from tensorflow.python.ops import rnn
-from tensorflow.python.ops import rnn_cell
+import tensorflow.contrib.rnn as rnn_cell 
 from tensorflow.python.ops import variable_scope
 
 import math
@@ -29,7 +29,7 @@ import numpy as np
 from six.moves import xrange
 
 
-from tensorflow.models.rnn.translate import data_utils
+from translate import data_utils
 
 
 class Seq2SeqsModel:
@@ -88,10 +88,10 @@ class Seq2SeqsModel:
 
 
 		# Create the internal multi-layer cell for the RNN.
-		single_cell = tf.nn.rnn_cell.BasicLSTMCell(num_units)
+		single_cell = tf.contrib.rnn.BasicLSTMCell(num_units)
 		cell = single_cell
 		if num_layers > 1:
-			cell = tf.nn.rnn_cell.MultiRNNCell([single_cell] * num_layers)
+			cell = tf.contrib.rnn.MultiRNNCell([single_cell] * num_layers)
 
 
 
@@ -438,7 +438,7 @@ def embedding_rnn_seq2seqs(encoder_inputs, num_decoders, all_decoder_inputs, cel
 		encoder_cell = rnn_cell.EmbeddingWrapper(
 			cell, embedding_classes=num_encoder_symbols,
 			embedding_size=embedding_size)
-		_, encoder_state = rnn.rnn(encoder_cell, encoder_inputs, dtype=dtype)
+		_, encoder_state = rnn.dynamic_rnn(encoder_cell, encoder_inputs, dtype=dtype)
 
 		# Decoder.
 		if output_projection is None:

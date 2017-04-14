@@ -22,7 +22,6 @@ GO_ID = 1
 EOS_ID = 2
 UNK_ID = 3
 
-from chord2vec.seq2seq import seq2seq_model, seq2seqs_model
 
 tf.app.flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
 tf.app.flags.DEFINE_float("learning_rate_decay_factor", 0.99,
@@ -276,6 +275,7 @@ def _get_max_seqLength(chords):
 
 def create_seq2seqs_model(session, forward_only):
     """Create the model or load parameters in session """
+    from chord2vec.seq2seq import seq2seqs_model
     model = seq2seqs_model.Seq2SeqsModel(FLAGS.notes_range, _buckets, FLAGS.num_units,
                                          FLAGS.num_layers, FLAGS.max_gradient_norm, FLAGS.num_decoders, FLAGS.batch_size,
                                          FLAGS.learning_rate,
@@ -293,6 +293,7 @@ def create_seq2seqs_model(session, forward_only):
 
 def create_seq2seq_model(session, forward_only, attention, result_file=None, batch_size=None, same_param=False):
     """Create the model or load parameters in session """
+    from chord2vec.seq2seq import seq2seq_model
     if batch_size is None:
         batch_size = FLAGS.batch_size
 
