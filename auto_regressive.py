@@ -8,6 +8,9 @@ import pickle
 import numpy as np
 import random
 import sys
+from packaging import version
+
+
 
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import gen_math_ops
@@ -48,18 +51,23 @@ def extend_vector(input,r,batch_size):
     """
     [a,b,c] --> [[a,a,a],[b,b,b],[c,c,c]] if D=3
     """
-    return tf.batch_matmul(tf.ones([batch_size, r, 1]), tf.expand_dims(input, 1))
+    return tf.matmul(tf.ones([batch_size, r, 1]), tf.expand_dims(input, 1))
 
 def mask(input, W, r=D):
     inputs = extend_vector(input,r,batch_size)
-    return  tf.squeeze(tf.mul(inputs, [W]))
+    if oldversion:
+        return  tf.squeeze(tf.mul(inputs, [W]))
+    else:
+        return  tf.squeeze(tf.multiply(inputs, [W]))
 
 def cumsum_weights(input, W, r=D):
     masked=mask(input,W,r)
     triangle = ones_triangular(NUM_NOTES)
     size = batch_size
-    return tf.batch_matmul(masked, np.array([triangle]*size))
-
+    if oldversion:
+        return tf.batch_matmul(masked, np.array([triangle]*size))
+    else:
+        return tf.matmul(masked, np.array([triangle]*size))
 
 
 def normalize(input):
@@ -70,23 +78,37 @@ def auto_regressive_model(input, target, weights, bias):
     """
     Builds the auto regressive model. For details on the model, refer to the written report
     """
+    if oldversion:
+        hidden01 = tf.batch_matmul(normalize(input), weights['M1']) # V_d
 
-    hidden01 = tf.matmul(normalize(input), weights['M1']) # V_d
+        hidden01 = tf.batch_matmul(tf.expand_dims(hidden01,2),tf.ones([batch_size,1,NUM_NOTES])) # V_d augmented to D across  dimension 2
+    else:
+        hidden01 = tf.matmul(normalize(input), weights['M1']) # V_d
 
-    hidden01 = tf.batch_matmul(tf.expand_dims(hidden01,2),tf.ones([batch_size,1,NUM_NOTES])) # V_d augmented to D across  dimension 2
+        hidden01 = tf.matmul(tf.expand_dims(hidden01,2),tf.ones([batch_size,1,NUM_NOTES])) # V_d augmented to D across  dimension 2
 
     hidden02 = cumsum_weights(normalize(target), weights['M2'],D)  # V_c
 
     hidden = hidden01 + hidden02
 
     y = tf.zeros([1], tf.float32)
-    split = tf.split(0, batch_size, hidden)
-
-    y = tf.batch_matmul(tf.expand_dims(tf.transpose(tf.squeeze(split[0])), 1), tf.expand_dims(tf.transpose(weights['W']), 2))
+    if oldversion:
+        split = tf.split(0, batch_size, hidden)
+    else:
+        split = tf.split(hidden, batch_size, 0)
+    if oldversion:
+        y = tf.batch_matmul(tf.expand_dims(tf.transpose(tf.squeeze(split[0])), 1), tf.expand_dims(tf.transpose(weights['W']), 2))
+    else:
+        y = tf.matmul(tf.expand_dims(tf.transpose(tf.squeeze(split[0])), 1), tf.expand_dims(tf.transpose(weights['W']), 2))
 
     for i in range(1, len(split)):
-        y = tf.concat(0, [y, tf.batch_matmul(tf.expand_dims(tf.transpose(tf.squeeze(split[i])), 1),
+        if oldversion:
+            y = tf.concat(0, [y, tf.batch_matmul(tf.expand_dims(tf.transpose(tf.squeeze(split[i])), 1),
                                                      tf.expand_dims(tf.transpose(weights['W']), 2))])
+        else:
+            y = tf.concat( [y, tf.matmul(tf.expand_dims(tf.transpose(tf.squeeze(split[i])), 1),
+                                                     tf.expand_dims(tf.transpose(weights['W']), 2))],0)
+
     y = tf.squeeze(y)
 
     output = tf.reshape(y,[batch_size,NUM_NOTES])
@@ -138,20 +160,23 @@ def load_data(file_name = "JSB_Chorales.pickle"):
     return train_set, test_set, valid_set, total_batch, total_batch_test, total_batch_valid
 
 def train(file_name,checkpoint_path='save_models/nade3/nade_like_D1024_batch128.ckpt',load_model=None,print_train=False):
-
     print('Create model ...')
 
     pred = auto_regressive_model(input, target, weights, bias)
     # Define loss and optimizer
 
-    cost = tf.reduce_mean(tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(pred, target), 1))
+    cost = tf.reduce_mean(tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(logits=pred, labels=target), 1))
 
     optimizer = tf.train.AdamOptimizer(epsilon=1e-00, learning_rate=learning_rate).minimize(cost)
     # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
 
     # Initializing the variables
-    init = tf.initialize_all_variables()
-    saver = tf.train.Saver(tf.all_variables(), max_to_keep=1)
+    if oldversion:
+        init = tf.initialize_all_variables()
+        saver = tf.train.Saver(tf.all_variables(), max_to_keep=1)
+    else:
+        init = tf.global_variables_initializer()
+        saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)
     # Launch the graphx
 
     with tf.Session() as sess:
@@ -291,4 +316,8 @@ def print_error(file_name,checkpoint_path="save_models/new", print_train=False, 
 
 
 if __name__ == "__main__":
-    train(sys.argv[1], sys.argv[2])
+   oldversion=True
+   if version.parse(tf.__version__) > version.parse("0.11.0"):
+        oldversion=False
+
+   train("JSB_Chorales.pickle", "save_models/new")
