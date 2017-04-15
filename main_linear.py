@@ -55,6 +55,9 @@ def check_grad():
     model.check_gradient(train_set,binary_cross_entropy_cost)
 
 def main():
+    D=512
+    NUM_NOTES=88
+    file_name=None
     if len(sys.argv)>2:
         first_arg = sys.argv[1]
         second_arg = sys.argv[2]
