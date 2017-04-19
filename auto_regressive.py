@@ -182,11 +182,14 @@ def train(file_name,checkpoint_path='save_models/nade3/nade_like_D1024_batch128.
     with tf.Session() as sess:
         if load_model:
              checkpoint = tf.train.get_checkpoint_state(load_model)
+             print(checkpoint.model_checkpoint_path)
+             print(tf.gfile.Exists(checkpoint.model_checkpoint_path))
              if checkpoint and tf.gfile.Exists(checkpoint.model_checkpoint_path):
                  print("Reading model parameters from %s" % checkpoint.model_checkpoint_path)
                  saver.restore(sess, checkpoint.model_checkpoint_path)
              else:
                  print("ooops no saved model found in %s ! " % load_model)
+                 sys.exit()
             #saver.restore(sess, load_model)
         else:
             print("using fresh parameters...")
@@ -322,4 +325,4 @@ if __name__ == "__main__":
    oldversion=True
    if version.parse(tf.__version__) > version.parse("0.11.0"):
         oldversion=False
-   train("JSB_Chorales.pickle", "save_models/new")
+   train("JSB_Chorales.pickle", "save_models/new", load_model="data")
