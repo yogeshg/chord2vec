@@ -17,7 +17,7 @@ from tensorflow.python.ops import gen_math_ops
 
 # Parameters
 learning_rate = 0.002
-training_epochs = 20
+training_epochs = 200
 batch_size = 128
 display_step = 1
 
@@ -159,7 +159,7 @@ def load_data(file_name = "JSB_Chorales.pickle"):
 
     return train_set, test_set, valid_set, total_batch, total_batch_test, total_batch_valid
 
-def train(file_name,checkpoint_path='save_models/nade3/nade_like_D1024_batch128.ckpt',load_model=None,print_train=False):
+def train(file_name,checkpoint_path='save_models/nade3/nade_like_D1024_batch128.ckpt', load_model=None, print_train=False):
     print('Create model ...')
 
     pred = auto_regressive_model(input, target, weights, bias)
@@ -325,4 +325,4 @@ if __name__ == "__main__":
    oldversion=True
    if version.parse(tf.__version__) > version.parse("0.11.0"):
         oldversion=False
-   train("JSB_Chorales.pickle", "save_models/new", load_model="data")
+   train("JSB_Chorales.pickle", checkpoint_path="save_models/new", load_model="save_models")
