@@ -17,7 +17,7 @@ from tensorflow.python.ops import gen_math_ops
 
 # Parameters
 learning_rate = 0.002
-training_epochs = 200
+training_epochs = 20
 batch_size = 128
 display_step = 1
 
@@ -205,10 +205,13 @@ def train(file_name,checkpoint_path='save_models/nade3/nade_like_D1024_batch128.
         best_val_epoch = -1
         strikes = 0
         for epoch in range(training_epochs):
+            print('epoch:', epoch, 'of', training_epochs,"\n")
             avg_cost = 0.
 
             # Loop over all batches
             for i in range(total_batch):
+                if i % 50==0:
+                    print('batch:', i, 'of', total_batch)
                 batch_x, batch_y = get_batch(train_set, i)
                 # Run optimization op (backprop) and cost op (to get loss value)
                 _, c, out = sess.run([optimizer, cost, pred], feed_dict={input: batch_x,
@@ -319,5 +322,4 @@ if __name__ == "__main__":
    oldversion=True
    if version.parse(tf.__version__) > version.parse("0.11.0"):
         oldversion=False
-
    train("JSB_Chorales.pickle", "save_models/new")
