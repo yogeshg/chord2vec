@@ -17,7 +17,7 @@ from tensorflow.python.ops import gen_math_ops
 
 # Parameters
 learning_rate = 0.002
-training_epochs = 200
+training_epochs = 0
 batch_size = 128
 display_step = 1
 
@@ -179,7 +179,7 @@ def train(file_name,checkpoint_path='save_models/nade3/nade_like_D1024_batch128.
         saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)
     # Launch the graphx
 
-    with tf.Session() as sess:
+    if True: #with tf.Session() as sess:
         if load_model:
              checkpoint = tf.train.get_checkpoint_state(load_model)
              print(checkpoint.model_checkpoint_path)
@@ -323,6 +323,7 @@ def print_error(file_name,checkpoint_path="save_models/new", print_train=False, 
 
 if __name__ == "__main__":
    oldversion=True
+   sess = tf.InteractiveSession()
    if version.parse(tf.__version__) > version.parse("0.11.0"):
         oldversion=False
    train("JSB_Chorales.pickle", checkpoint_path="save_models/new", load_model="save_models")
