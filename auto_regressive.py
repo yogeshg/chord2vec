@@ -10,10 +10,39 @@ import random
 import sys
 from packaging import version
 
-
-
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import gen_math_ops
+
+import logging
+logger = logging.getLogger(__name__)
+
+def about(x, LINE=80, SINGLE_LINE=False):
+    '''
+    author: Yogesh Garg (https://github.com/yogeshg)
+    '''
+    s ='type:'+str(type(x))+' '
+    try:
+        s+='shape:'+str(x.shape)+' '
+    except Exception as e:
+        pass
+    try:
+        s+='dtype:'+str(x.dtype)+' '
+    except Exception as e:
+        pass
+    try:
+        s1 = str(x)
+        if(SINGLE_LINE):
+            s1 = ' '.join(s1.split('\n'))
+            extra = (len(s)+len(s1)) - LINE
+            if(extra > 0):
+                s1 = s1[:-(extra+3)]+'...'
+            s+=s1
+        else:
+            s+='\n'+s1
+    except Exception as e:
+        pass
+    return s
+
 
 # Parameters
 learning_rate = 0.002
@@ -99,19 +128,33 @@ def auto_regressive_model(input, target, weights, bias):
     if oldversion:
         y = tf.batch_matmul(tf.expand_dims(tf.transpose(tf.squeeze(split[0])), 1), tf.expand_dims(tf.transpose(weights['W']), 2))
     else:
-        y = tf.matmul(tf.expand_dims(tf.transpose(tf.squeeze(split[0])), 1), tf.expand_dims(tf.transpose(weights['W']), 2))
+        y = tf.matmul(
+                    tf.expand_dims(tf.transpose(tf.squeeze(split[0])), 1),
+                    tf.expand_dims(tf.transpose(weights['W']), 2)
+                    )
 
+    s0 = about(y)
     for i in range(1, len(split)):
         if oldversion:
             y = tf.concat(0, [y, tf.batch_matmul(tf.expand_dims(tf.transpose(tf.squeeze(split[i])), 1),
                                                      tf.expand_dims(tf.transpose(weights['W']), 2))])
         else:
-            y = tf.concat( [y, tf.matmul(tf.expand_dims(tf.transpose(tf.squeeze(split[i])), 1),
-                                                     tf.expand_dims(tf.transpose(weights['W']), 2))],0)
-
+            y = tf.concat( [y, tf.matmul(
+                                tf.expand_dims(tf.transpose(tf.squeeze(split[i])), 1),
+                                tf.expand_dims(tf.transpose(weights['W']), 2)
+                            )],0)
+    s1 = about(y)
     y = tf.squeeze(y)
-
+    s2 = about(y)
     output = tf.reshape(y,[batch_size,NUM_NOTES])
+
+    logger.info('hidden01:\n'+ about(hidden01))
+    logger.info('hidden02:\n'+ about(hidden02))
+    logger.info('hidden:\n'+ about(hidden))
+    logger.info('y0:\n'+ s0)
+    logger.info('y1:\n'+ s1)
+    logger.info('y2:\n'+ s2)
+    logger.info('output:\n'+ about(output))
 
     return output
 
