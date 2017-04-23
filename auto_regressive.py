@@ -17,7 +17,7 @@ from tensorflow.python.ops import gen_math_ops
 
 # Parameters
 learning_rate = 0.002
-training_epochs = 0
+training_epochs = 20
 batch_size = 128
 display_step = 1
 
@@ -320,10 +320,19 @@ def print_error(file_name,checkpoint_path="save_models/new", print_train=False, 
         print("test cost")
         print(avg_cost_test)
 
-
 if __name__ == "__main__":
-   oldversion=True
-   sess = tf.InteractiveSession()
-   if version.parse(tf.__version__) > version.parse("0.11.0"):
-        oldversion=False
-   train("JSB_Chorales.pickle", checkpoint_path="save_models/new", load_model="save_models")
+    import sys
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file_name', required=True, type=str, help='location of pickle file to train on')
+    parser.add_argument('--checkpoint_path', required=True, type=str, help='path to save model checkpoints')
+    parser.add_argument('--load_model', default=None, help='pre trained model to resume training')
+    parser.add_argument('--print_train', action='store_true', default=False, help='verbosity')
+    args = parser.parse_args(sys.argv[1:])
+    oldversion=True
+    sess = tf.InteractiveSession()
+    if version.parse(tf.__version__) > version.parse("0.11.0"):
+         oldversion=False
+    train(**args.__dict__)
+    # train("JSB_Chorales.pickle", checkpoint_path="save_models/new", load_model="save_models")
+
